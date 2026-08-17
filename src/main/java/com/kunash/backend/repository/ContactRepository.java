@@ -11,7 +11,6 @@ public interface ContactRepository extends JpaRepository<Contact, Long> {
 
     /**
      * Get all contacts ordered by creation date (newest first)
-     * This will be used in the admin panel
      */
     List<Contact> findAllByOrderByCreatedAtDesc();
 }

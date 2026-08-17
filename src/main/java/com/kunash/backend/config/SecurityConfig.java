@@ -27,29 +27,15 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // =============================================
-                        // PUBLIC ENDPOINTS - No authentication required
-                        // =============================================
-                        .requestMatchers(
-                                "/api/auth/login",          // Login endpoint
-                                "/api/contact/submit"        // ✅ Contact form submission (NEW!)
-                        ).permitAll()
-
-                        // =============================================
-                        // ADMIN ENDPOINTS - Authentication required
-                        // =============================================
-                        .requestMatchers(
-                                "/api/contact/admin/**",     // ✅ All contact admin endpoints (NEW!)
-                                "/api/test/**"               // Test endpoints
-                        ).authenticated()
-
-                        // =============================================
-                        // ALL OTHER ENDPOINTS - Authentication required
-                        // =============================================
+                        .requestMatchers("/api/auth/**").permitAll()        // Login - PUBLIC
+                        .requestMatchers("/api/contact/**").permitAll()     // ✅ Contact form - PUBLIC
+                        .requestMatchers("/api/jobs").permitAll()           // View jobs - PUBLIC
+                        .requestMatchers("/api/applications").permitAll()   // Apply - PUBLIC
+                        .requestMatchers("/api/admin/**").authenticated()   // Admin - NEEDS AUTH
                         .anyRequest().authenticated()
                 )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -62,8 +48,8 @@ public class SecurityConfig {
                 "http://localhost:3000",
                 "http://localhost:5500",
                 "http://127.0.0.1:5500",
-                "http://localhost:5501",        // ✅ ADD YOUR FRONTEND URL
-                "http://127.0.0.1:5501"         // ✅ ADD YOUR FRONTEND URL
+                "http://localhost:5501",
+                "http://127.0.0.1:5501"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));

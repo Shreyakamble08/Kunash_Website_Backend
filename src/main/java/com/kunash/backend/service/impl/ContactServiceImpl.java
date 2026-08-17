@@ -24,7 +24,7 @@ public class ContactServiceImpl implements ContactService {
     @Override
     @Transactional
     public ContactResponse submitContact(ContactRequest request) {
-        log.info("📝 Submitting contact from: {}", request.getEmail());
+        log.info("Submitting contact from: {}", request.getEmail());
 
         // Step 1: Convert Request DTO to Entity
         Contact contact = new Contact();
@@ -37,7 +37,7 @@ public class ContactServiceImpl implements ContactService {
 
         // Step 2: Save to Database
         Contact savedContact = contactRepository.save(contact);
-        log.info("✅ Contact saved with ID: {}", savedContact.getId());
+        log.info("Contact saved with ID: {}", savedContact.getId());
 
         // Step 3: Convert Entity to Response DTO
         return convertToResponse(savedContact);
@@ -45,7 +45,7 @@ public class ContactServiceImpl implements ContactService {
 
     @Override
     public List<ContactResponse> getAllContacts() {
-        log.info("📋 Fetching all contacts");
+        log.info("Fetching all contacts");
 
         // Step 1: Get all contacts from database (ordered by date desc)
         List<Contact> contacts = contactRepository.findAllByOrderByCreatedAtDesc();
@@ -58,7 +58,7 @@ public class ContactServiceImpl implements ContactService {
 
     @Override
     public ContactResponse getContactById(Long id) {
-        log.info("🔍 Fetching contact with ID: {}", id);
+        log.info("Fetching contact with ID: {}", id);
 
         // Step 1: Find contact by ID or throw exception
         Contact contact = contactRepository.findById(id)
@@ -71,7 +71,7 @@ public class ContactServiceImpl implements ContactService {
     @Override
     @Transactional
     public void deleteContact(Long id) {
-        log.info("🗑️ Deleting contact with ID: {}", id);
+        log.info("Deleting contact with ID: {}", id);
 
         // Step 1: Check if contact exists
         if (!contactRepository.existsById(id)) {
@@ -80,7 +80,7 @@ public class ContactServiceImpl implements ContactService {
 
         // Step 2: Delete the contact
         contactRepository.deleteById(id);
-        log.info("✅ Contact deleted with ID: {}", id);
+        log.info("Contact deleted with ID: {}", id);
     }
 
     // ============ HELPER METHOD ============
