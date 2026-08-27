@@ -29,7 +29,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()        // Login - PUBLIC
-                        .requestMatchers("/api/contact/**").permitAll()     // ✅ Contact form - PUBLIC
+                        .requestMatchers("/api/contact", "/api/contact/**", "/api/applications", "/api/jobs", "/api/test/email").permitAll()
                         .requestMatchers("/api/jobs").permitAll()           // View jobs - PUBLIC
                         .requestMatchers("/api/applications").permitAll()   // Apply - PUBLIC
                         .requestMatchers("/api/admin/**").authenticated()   // Admin - NEEDS AUTH

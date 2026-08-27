@@ -5,6 +5,7 @@ import com.kunash.backend.dto.response.ContactResponse;
 import com.kunash.backend.entity.Contact;
 import com.kunash.backend.repository.ContactRepository;
 import com.kunash.backend.service.ContactService;
+import com.kunash.backend.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,13 +21,13 @@ import java.util.stream.Collectors;
 public class ContactServiceImpl implements ContactService {
 
     private final ContactRepository contactRepository;
+    private final EmailService emailService;  // ← Add this
 
     @Override
     @Transactional
     public ContactResponse submitContact(ContactRequest request) {
         log.info("Submitting contact from: {}", request.getEmail());
 
-        // Step 1: Convert Request DTO to Entity
         Contact contact = new Contact();
         contact.setName(request.getName());
         contact.setPhone(request.getPhone());
@@ -35,22 +36,41 @@ public class ContactServiceImpl implements ContactService {
         contact.setMessage(request.getMessage());
         contact.setCreatedAt(LocalDateTime.now());
 
-        // Step 2: Save to Database
         Contact savedContact = contactRepository.save(contact);
         log.info("Contact saved with ID: {}", savedContact.getId());
 
-        // Step 3: Convert Entity to Response DTO
+        // ========== SEND EMAILS ==========
+        try {
+            emailService.sendThankYouEmail(
+                    savedContact.getEmail(),
+                    savedContact.getName(),
+                    "Contact"
+            );
+        } catch (Exception e) {
+            log.error("Failed to send thank you email: {}", e.getMessage());
+        }
+
+        try {
+            String formData = String.format(
+                    "Name: %s\nEmail: %s\nPhone: %s\nSubject: %s\nMessage: %s\nSubmitted: %s",
+                    savedContact.getName(),
+                    savedContact.getEmail(),
+                    savedContact.getPhone(),
+                    savedContact.getSubject(),
+                    savedContact.getMessage(),
+                    savedContact.getCreatedAt()
+            );
+            emailService.sendAdminNotification(formData, "Contact", savedContact.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send admin notification: {}", e.getMessage());
+        }
+
         return convertToResponse(savedContact);
     }
 
     @Override
     public List<ContactResponse> getAllContacts() {
-        log.info("Fetching all contacts");
-
-        // Step 1: Get all contacts from database (ordered by date desc)
         List<Contact> contacts = contactRepository.findAllByOrderByCreatedAtDesc();
-
-        // Step 2: Convert each Entity to Response DTO
         return contacts.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
@@ -58,36 +78,21 @@ public class ContactServiceImpl implements ContactService {
 
     @Override
     public ContactResponse getContactById(Long id) {
-        log.info("Fetching contact with ID: {}", id);
-
-        // Step 1: Find contact by ID or throw exception
         Contact contact = contactRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Contact not found with id: " + id));
-
-        // Step 2: Convert Entity to Response DTO
         return convertToResponse(contact);
     }
 
     @Override
     @Transactional
     public void deleteContact(Long id) {
-        log.info("Deleting contact with ID: {}", id);
-
-        // Step 1: Check if contact exists
         if (!contactRepository.existsById(id)) {
             throw new RuntimeException("Contact not found with id: " + id);
         }
-
-        // Step 2: Delete the contact
         contactRepository.deleteById(id);
         log.info("Contact deleted with ID: {}", id);
     }
 
-    // ============ HELPER METHOD ============
-
-    /**
-     * Convert Contact Entity to ContactResponse DTO
-     */
     private ContactResponse convertToResponse(Contact contact) {
         return new ContactResponse(
                 contact.getId(),
